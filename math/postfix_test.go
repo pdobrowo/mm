@@ -21,26 +21,52 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package cmd
+package math
 
 import (
-	"fmt"
-	"os"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
-	"github.com/spf13/cobra"
+	"testing"
 )
 
-var RootCmd = &cobra.Command{
-	Use:   "mm",
-	Short: "Math-mod: a package for symbolic manipulation large algebraic expressions",
-	Long: `Math-mod is a tool operate on large algebraic expressions from
-command line. It supports formatting, semi-automatic simplification
-and statistical analysis.`,
+func TestPostfix(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Postfix Suite")
 }
 
-func Execute() {
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
-}
+var _ = Describe("Postfix Object", func() {
+	var (
+		infix Tokens
+		err   error
+	)
+
+	BeforeEach(func() {
+
+	})
+
+	Context("when infix is converted to postfix", func() {
+		It("should succeed", func() {
+			infix, err = ParseInfixString("3 + 4 * 2 - ( 1 - 5 ) ^ 2 ^ 3")
+			Expect(err).ShouldNot(HaveOccurred())
+
+			postfix := ToPostfix(infix)
+
+			Expect(postfix).To(Equal(Tokens{
+				NewInt(3),
+				NewInt(4),
+				NewInt(2),
+				NewMul(),
+				NewPlus(),
+				NewInt(1),
+				NewInt(5),
+				NewMinus(),
+				NewInt(2),
+				NewInt(3),
+				NewPow(),
+				NewPow(),
+				NewMinus(),
+			}))
+		})
+	})
+})

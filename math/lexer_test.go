@@ -21,14 +21,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package core
+package math
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"testing"
-	"strings"
 )
 
 func TestLexer(t *testing.T) {
@@ -36,14 +35,10 @@ func TestLexer(t *testing.T) {
 	RunSpecs(t, "Lexer Suite")
 }
 
-func parseString(eqn string) ([]Token, error) {
-	return Parse(strings.NewReader(eqn))
-}
-
 var _ = Describe("Lexer Object", func() {
 	var (
-		tokens []Token
-		err error
+		infix Tokens
+		err   error
 	)
 
 	BeforeEach(func() {
@@ -52,15 +47,47 @@ var _ = Describe("Lexer Object", func() {
 
 	Context("when whitespace is parsed", func() {
 		It("should succeed", func() {
-			tokens, err = parseString("  \t  x \n +   \v 1\f     \r")
+			infix, err = ParseInfixString("  \t  x \n +   \v 1\f     \r")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})
 
 	Context("when different tokens are parsed", func() {
 		It("should succeed", func() {
-			tokens, err = parseString("x+y* z ^ w + ( x (y + z)^3 + 7 )")
+			infix, err = ParseInfixString("x+y* z ^ w + ( x (y + z)^3 + 7 )")
 			Expect(err).ShouldNot(HaveOccurred())
+		})
+	})
+
+	Context("when integer is on its own", func() {
+		It("should succeed", func() {
+			infix, err = ParseInfixString("7")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(infix).To(Equal(Tokens{NewInt(7)}))
+		})
+	})
+
+	Context("when variable is on its own", func() {
+		It("should succeed", func() {
+			infix, err = ParseInfixString("x")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(infix).To(Equal(Tokens{NewVar("x")}))
+		})
+	})
+
+	Context("when operator is on its own", func() {
+		It("should succeed", func() {
+			infix, err = ParseInfixString("+")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(infix).To(Equal(Tokens{NewPlus()}))
+		})
+	})
+
+	Context("when bracket is on its own", func() {
+		It("should succeed", func() {
+			infix, err = ParseInfixString("(")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(infix).To(Equal(Tokens{NewOpen()}))
 		})
 	})
 })

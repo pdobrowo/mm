@@ -21,59 +21,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package core
+package math
 
 import (
 	"bufio"
 	"io"
-
-	"github.com/golang/go/src/pkg/strconv"
+	"strconv"
+	"strings"
 )
 
-const (
-	KindInt = iota
-
-	KindVar
-
-	KindPlus
-	KindMinus
-	KindMul
-	KindPow
-
-	KindOpen
-	KindClose
-)
-
-type Token struct {
-	kind  int
-	value interface{}
-}
-
-func (token Token) String() string {
-	switch token.kind {
-	case KindInt:
-		return string(token.value.(int))
-	case KindVar:
-		return token.value.(string)
-	case KindPlus:
-		return "+"
-	case KindMinus:
-		return "-"
-	case KindMul:
-		return "*"
-	case KindPow:
-		return "^"
-	case KindOpen:
-		return "("
-	case KindClose:
-		return ")"
-	}
-
-	panic("invalid token kind")
-}
-
-func Parse(reader io.Reader) ([]Token, error) {
-	tokens := []Token{}
+func ParseInfix(reader io.Reader) (Tokens, error) {
+	tokens := Tokens{}
 	scanner := bufio.NewScanner(reader)
 
 	scanner.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
@@ -98,7 +56,7 @@ func Parse(reader io.Reader) ([]Token, error) {
 		// scan one-character tokens
 		switch data[i] {
 		case '+', '-', '*', '^', '(', ')':
-			return i + 1, data[i : i+1], nil
+			return i + 1, data[i: i+1], nil
 		}
 
 		// scan integer or variable
@@ -112,89 +70,50 @@ func Parse(reader io.Reader) ([]Token, error) {
 			}
 		}
 
-		if j < len(data) {
-			return j, data[i:j], nil
-		}
-
-		return i, nil, nil
+		return j, data[i:j], nil
 	})
 
-next_token:
 	for scanner.Scan() {
 		raw := scanner.Text()
 		switch raw {
 		case "+":
-			tokens = append(tokens, Token{
-				kind:  KindPlus,
-				value: nil,
-			})
-
+			tokens = append(tokens, NewPlus())
 			continue
 
 		case "-":
-			tokens = append(tokens, Token{
-				kind:  KindMinus,
-				value: nil,
-			})
-
+			tokens = append(tokens, NewMinus())
 			continue
 
 		case "*":
-			tokens = append(tokens, Token{
-				kind:  KindMul,
-				value: nil,
-			})
-
+			tokens = append(tokens, NewMul())
 			continue
 
 		case "^":
-			tokens = append(tokens, Token{
-				kind:  KindPow,
-				value: nil,
-			})
-
+			tokens = append(tokens, NewPow())
 			continue
 
 		case "(":
-			tokens = append(tokens, Token{
-				kind:  KindOpen,
-				value: nil,
-			})
-
+			tokens = append(tokens, NewOpen())
 			continue
 
 		case ")":
-			tokens = append(tokens, Token{
-				kind:  KindClose,
-				value: nil,
-			})
-
+			tokens = append(tokens, NewClose())
 			continue
 		}
 
 		// integer or variable
-		for r := range raw {
-			if r < '0' || r > '9' {
-				tokens = append(tokens, Token{
-					kind:  KindVar,
-					value: raw,
-				})
-
-				continue next_token
-			}
-		}
-
-		i, err := strconv.ParseInt(raw, 10, 0)
+		i, err := strconv.ParseInt(raw, 10, 64)
 
 		if err != nil {
-			return nil, err
+			tokens = append(tokens, NewVar(raw))
+		} else {
+			tokens = append(tokens, NewInt(i))
 		}
-
-		tokens = append(tokens, Token{
-			kind:  KindInt,
-			value: i,
-		})
 	}
 
 	return tokens, nil
+}
+
+func ParseInfixString(infix string) (Tokens, error) {
+	return ParseInfix(strings.NewReader(infix))
 }

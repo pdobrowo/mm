@@ -21,26 +21,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package cmd
+package math
 
-import (
-	"fmt"
-	"os"
+func ToPostfix(infix Tokens) (postfix Tokens) {
+	var stack []Token
 
-	"github.com/spf13/cobra"
-)
-
-var RootCmd = &cobra.Command{
-	Use:   "mm",
-	Short: "Math-mod: a package for symbolic manipulation large algebraic expressions",
-	Long: `Math-mod is a tool operate on large algebraic expressions from
-command line. It supports formatting, semi-automatic simplification
-and statistical analysis.`,
-}
-
-func Execute() {
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
+	for _, token := range infix {
+		switch token.Kind {
+		case KindOpen:
+			stack = append(stack, token)
+		case KindClose:
+			var op Token
+			for {
+				op, stack = stack[len(stack)-1], stack[:len(stack)-1]
+				if op.Kind == KindOpen {
+					break
+				}
+				postfix = append(postfix, op)
+			}
+		default:
+			if operPropA, isOperA := OperProps[token.Kind]; isOperA {
+				for len(stack) > 0 {
+					oper := stack[len(stack)-1]
+					if operPropB, isOperB := OperProps[oper.Kind]; !isOperB || operPropA.prec > operPropB.prec || operPropA.prec == operPropB.prec && operPropA.rightAssoc {
+						break
+					}
+					stack = stack[:len(stack)-1]
+					postfix = append(postfix, oper)
+				}
+				stack = append(stack, token)
+			} else {
+				postfix = append(postfix, token)
+			}
+		}
 	}
+	for len(stack) > 0 {
+		postfix = append(postfix, stack[len(stack)-1])
+		stack = stack[:len(stack)-1]
+	}
+	return
 }

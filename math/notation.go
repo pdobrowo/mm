@@ -21,26 +21,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package cmd
+package math
 
-import (
-	"fmt"
-	"os"
-
-	"github.com/spf13/cobra"
-)
-
-var RootCmd = &cobra.Command{
-	Use:   "mm",
-	Short: "Math-mod: a package for symbolic manipulation large algebraic expressions",
-	Long: `Math-mod is a tool operate on large algebraic expressions from
-command line. It supports formatting, semi-automatic simplification
-and statistical analysis.`,
-}
-
-func Execute() {
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
-}
+type Tokens []Token
