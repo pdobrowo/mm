@@ -29,20 +29,20 @@ import (
 
 const (
 	// numbers
-	KindInt = iota
+	KindConst = iota
 
 	// variable
 	KindVar
 
 	// operators
-	KindPlus
-	KindMinus
-	KindMul
-	KindPow
+	KindOpAdd
+	KindOpSub
+	KindOpMul
+	KindOpPow
 
-	// brackets
-	KindOpen
-	KindClose
+	// parenthesis
+	KindParOpen
+	KindParClose
 )
 
 type Kind int
@@ -51,10 +51,10 @@ var OperProps = map[Kind]struct {
 	prec       int  // precedence
 	rightAssoc bool // right-associativity
 }{
-	KindPow:   {4, true},
-	KindMul:   {3, false},
-	KindPlus:  {2, false},
-	KindMinus: {2, false},
+	KindOpPow: {4, true},
+	KindOpMul: {3, false},
+	KindOpAdd: {2, false},
+	KindOpSub: {2, false},
 }
 
 type Token struct {
@@ -62,9 +62,47 @@ type Token struct {
 	Value interface{}
 }
 
-func NewInt(value int64) Token {
+func IsOp(token Token) bool {
+	switch token.Kind {
+	case KindOpPow, KindOpMul, KindOpAdd, KindOpSub:
+		return true
+	default:
+		return false
+	}
+}
+
+func IsPar(token Token) bool {
+	switch token.Kind {
+	case KindParOpen, KindParClose:
+		return true
+	default:
+		return false
+	}
+}
+
+func IsConst(token Token) bool {
+	return token.Kind == KindConst
+}
+
+func IsVar(token Token) bool {
+	return token.Kind == KindVar
+}
+
+func IsVarConst(token Token) bool {
+	return IsVar(token) || IsConst(token)
+}
+
+func Var(token Token) string {
+	return token.Value.(string)
+}
+
+func Const(token Token) int64 {
+	return token.Value.(int64)
+}
+
+func NewConst(value int64) Token {
 	return Token{
-		Kind:  KindInt,
+		Kind:  KindConst,
 		Value: value,
 	}
 }
@@ -77,46 +115,46 @@ func NewVar(value string) Token {
 }
 
 func NewPlus() Token {
-	return Token{Kind: KindPlus}
+	return Token{Kind: KindOpAdd}
 }
 
 func NewMinus() Token {
-	return Token{Kind: KindMinus}
+	return Token{Kind: KindOpSub}
 }
 
 func NewMul() Token {
-	return Token{Kind: KindMul}
+	return Token{Kind: KindOpMul}
 }
 
 func NewPow() Token {
-	return Token{Kind: KindPow}
+	return Token{Kind: KindOpPow}
 }
 
 func NewOpen() Token {
-	return Token{Kind: KindOpen}
+	return Token{Kind: KindParOpen}
 }
 
 func NewClose() Token {
-	return Token{Kind: KindClose}
+	return Token{Kind: KindParClose}
 }
 
 func (token Token) String() string {
 	switch token.Kind {
-	case KindInt:
-		return fmt.Sprintf("%d", token.Value.(int64))
+	case KindConst:
+		return fmt.Sprintf("%d", Const(token))
 	case KindVar:
-		return token.Value.(string)
-	case KindPlus:
+		return Var(token)
+	case KindOpAdd:
 		return "+"
-	case KindMinus:
+	case KindOpSub:
 		return "-"
-	case KindMul:
+	case KindOpMul:
 		return "*"
-	case KindPow:
+	case KindOpPow:
 		return "^"
-	case KindOpen:
+	case KindParOpen:
 		return "("
-	case KindClose:
+	case KindParClose:
 		return ")"
 	}
 

@@ -30,38 +30,83 @@ import (
 	"testing"
 )
 
-func TestPostfix(t *testing.T) {
+func TestAlgebra(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Postfix Suite")
+	RunSpecs(t, "Algebra Suite")
 }
 
-var _ = Describe("Postfix object", func() {
-	var (
-		infix Tokens
-		err   error
-	)
-
-	Context("when infix is converted to postfix", func() {
+var _ = Describe("Algebra object", func() {
+	Context("when monomials are normalized", func() {
 		It("should succeed", func() {
-			infix, err = ParseInfixString("3 + 4 * 2 - ( 1 - 5 ) ^ 2 ^ 3")
-			Expect(err).ShouldNot(HaveOccurred())
-
-			postfix := ToPostfix(infix)
-
-			Expect(postfix).To(Equal(Tokens{
-				NewConst(3),
-				NewConst(4),
+			m := Monomial{
+				NewVar("x"),
+				NewVar("z"),
+				NewVar("a"),
+				NewConst(7),
 				NewConst(2),
-				NewMul(),
-				NewPlus(),
-				NewConst(1),
-				NewConst(5),
-				NewMinus(),
-				NewConst(2),
+				NewVar("m"),
+			}
+
+			m = m.Normalized()
+
+			Expect(m.IsNormalized()).To(Equal(true))
+
+			Expect(m).To(Equal(Monomial{
+				NewConst(14),
+				NewVar("a"),
+				NewVar("m"),
+				NewVar("x"),
+				NewVar("z"),
+			}))
+		})
+	})
+
+	Context("when monomials are powered", func() {
+		It("should succeed", func() {
+			lhs := Monomial{
+				NewVar("x"),
+				NewVar("y"),
+				NewVar("z"),
+			}
+
+			rhs := Monomial{
 				NewConst(3),
-				NewPow(),
-				NewPow(),
-				NewMinus(),
+			}
+
+			Expect(lhs.Pow(rhs)).To(Equal(Monomial{
+				NewVar("x"),
+				NewVar("x"),
+				NewVar("x"),
+				NewVar("y"),
+				NewVar("y"),
+				NewVar("y"),
+				NewVar("z"),
+				NewVar("z"),
+				NewVar("z"),
+			}))
+		})
+	})
+
+	Context("when monomials are multiplies", func() {
+		It("should succeed", func() {
+			lhs := Monomial{
+				NewConst(2),
+				NewVar("x"),
+				NewVar("y"),
+				NewVar("z"),
+			}
+
+			rhs := Monomial{
+				NewConst(3),
+				NewVar("a"),
+			}
+
+			Expect(lhs.Mul(rhs)).To(Equal(Monomial{
+				NewConst(6),
+				NewVar("a"),
+				NewVar("x"),
+				NewVar("y"),
+				NewVar("z"),
 			}))
 		})
 	})

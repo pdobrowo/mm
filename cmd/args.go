@@ -21,23 +21,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package math
+package cmd
 
-func ImplicitOperMul(tokens Tokens) (result Tokens) {
-	result = Tokens{}
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"os"
 
-	for _, token := range tokens {
-		if len(result) != 0 {
-			prev := result[len(result)-1]
-			switch prev.Kind {
-			case KindInt, KindVar, KindClose:
-				switch token.Kind {
-				case KindInt, KindVar, KindOpen:
-					result = append(result, Token{Kind: KindMul})
-				}
-			}
-		}
-		result = append(result, token)
+	"github.com/pdobrowo/mm/math"
+)
+
+func parseArgs(args []string, postfixFlag bool) (math.Tokens, error) {
+	var reader io.Reader
+	var err error
+
+	if err = checkFlags(); err != nil {
+		return nil, err
 	}
-	return
+
+	switch len(args) {
+	case 0:
+		reader = bufio.NewReader(os.Stdin)
+	case 1:
+		reader, err = os.Open(args[0])
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to open file: %v", args[0])
+		}
+	default:
+		return nil, fmt.Errorf("invalid number of arguments: %d", len(args))
+	}
+
+	var infix math.Tokens
+	infix, err = math.ParseInfix(reader)
+
+	if err != nil {
+		return nil, err
+	}
+
+	infix = math.ExplicitMul(infix)
+
+	if postfixFlag {
+		return math.ToPostfix(infix), nil
+	} else {
+		return infix, nil
+	}
 }

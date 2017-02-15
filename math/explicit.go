@@ -23,46 +23,22 @@
 
 package math
 
-import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+// ExplicitMul adds explicit multiplication operators in places where multiplication is implicit
+func ExplicitMul(tokens Tokens) (result Tokens) {
+	result = Tokens{}
 
-	"testing"
-)
-
-func TestPostfix(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Postfix Suite")
+	for _, token := range tokens {
+		if len(result) != 0 {
+			prev := result[len(result)-1]
+			switch prev.Kind {
+			case KindConst, KindVar, KindParClose:
+				switch token.Kind {
+				case KindConst, KindVar, KindParOpen:
+					result = append(result, Token{Kind: KindOpMul})
+				}
+			}
+		}
+		result = append(result, token)
+	}
+	return
 }
-
-var _ = Describe("Postfix object", func() {
-	var (
-		infix Tokens
-		err   error
-	)
-
-	Context("when infix is converted to postfix", func() {
-		It("should succeed", func() {
-			infix, err = ParseInfixString("3 + 4 * 2 - ( 1 - 5 ) ^ 2 ^ 3")
-			Expect(err).ShouldNot(HaveOccurred())
-
-			postfix := ToPostfix(infix)
-
-			Expect(postfix).To(Equal(Tokens{
-				NewConst(3),
-				NewConst(4),
-				NewConst(2),
-				NewMul(),
-				NewPlus(),
-				NewConst(1),
-				NewConst(5),
-				NewMinus(),
-				NewConst(2),
-				NewConst(3),
-				NewPow(),
-				NewPow(),
-				NewMinus(),
-			}))
-		})
-	})
-})

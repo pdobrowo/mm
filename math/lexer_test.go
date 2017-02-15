@@ -35,15 +35,11 @@ func TestLexer(t *testing.T) {
 	RunSpecs(t, "Lexer Suite")
 }
 
-var _ = Describe("Lexer Object", func() {
+var _ = Describe("Lexer object", func() {
 	var (
 		infix Tokens
 		err   error
 	)
-
-	BeforeEach(func() {
-
-	})
 
 	Context("when whitespace is parsed", func() {
 		It("should succeed", func() {
@@ -63,7 +59,7 @@ var _ = Describe("Lexer Object", func() {
 		It("should succeed", func() {
 			infix, err = ParseInfixString("7")
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(infix).To(Equal(Tokens{NewInt(7)}))
+			Expect(infix).To(Equal(Tokens{NewConst(7)}))
 		})
 	})
 

@@ -107,7 +107,7 @@ func ParseInfix(reader io.Reader) (Tokens, error) {
 		if err != nil {
 			tokens = append(tokens, NewVar(raw))
 		} else {
-			tokens = append(tokens, NewInt(i))
+			tokens = append(tokens, NewConst(i))
 		}
 	}
 

@@ -24,12 +24,8 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"os"
 
-	"github.com/pdobrowo/mm/math"
 	"github.com/spf13/cobra"
 )
 
@@ -40,42 +36,13 @@ func checkFlags() error {
 }
 
 func formatCmdRun(cmd *cobra.Command, args []string) error {
-	var reader io.Reader
-	var err error
-
-	if err = checkFlags(); err != nil {
-		return err
-	}
-
-	switch len(args) {
-	case 0:
-		reader = bufio.NewReader(os.Stdin)
-	case 1:
-		reader, err = os.Open(args[0])
-
-		if err != nil {
-			return fmt.Errorf("failed to open file: %v", args[0])
-		}
-	default:
-		return fmt.Errorf("invalid number of arguments: %d", len(args))
-	}
-
-	infix, err := math.ParseInfix(reader)
+	tokens, err := parseArgs(args, *postfixFlag)
 
 	if err != nil {
 		return err
 	}
 
-	infix = math.ImplicitOperMul(infix)
-
-	if *postfixFlag == true {
-		postfix := math.ToPostfix(infix)
-
-		fmt.Println(postfix)
-	} else {
-		fmt.Println(infix)
-	}
-
+	fmt.Println(tokens)
 	return nil
 }
 

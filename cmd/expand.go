@@ -21,6 +21,70 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package math
+package cmd
 
-type Tokens []Token
+import (
+	"github.com/pdobrowo/mm/math"
+	"github.com/spf13/cobra"
+)
+
+func expandCmdRun(cmd *cobra.Command, args []string) error {
+	tokens, err := parseArgs(args, true)
+
+	if err != nil {
+		return err
+	}
+
+	var stack []math.Polynomial
+
+	for _, token := range tokens {
+		if math.IsVarConst(token) {
+			stack = append(stack, math.NewPolynomial(token))
+			continue
+		}
+
+		if !math.IsOp(token) {
+			panic("token is not an operator")
+		}
+
+		if len(stack) < 2 {
+			panic("stack is tool small")
+		}
+
+		lhs := stack[len(stack)-1]
+		rhs := stack[len(stack)-1]
+
+		stack = stack[:len(stack)-2]
+
+		switch token.Kind {
+		case math.KindOpPow:
+			stack = append(stack, lhs.Pow(rhs))
+		case math.KindOpMul:
+			stack = append(stack, lhs.Mul(rhs))
+		case math.KindOpAdd:
+			stack = append(stack, lhs.Add(rhs))
+		case math.KindOpSub:
+			stack = append(stack, lhs.Sub(rhs))
+		}
+	}
+
+	if len(stack) != 1 {
+		panic("stack should contain one token")
+	}
+
+	// print
+
+	return nil
+}
+
+// expandCmd represents the expand command
+var expandCmd = &cobra.Command{
+	Use:   "expand",
+	Short: "Expand an algebraic expression",
+	Long:  `Expands a given expression removing all brackets`,
+	RunE:  expandCmdRun,
+}
+
+func init() {
+	RootCmd.AddCommand(expandCmd)
+}

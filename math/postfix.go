@@ -24,17 +24,17 @@
 package math
 
 func ToPostfix(infix Tokens) (postfix Tokens) {
-	var stack []Token
+	var stack Tokens
 
 	for _, token := range infix {
 		switch token.Kind {
-		case KindOpen:
+		case KindParOpen:
 			stack = append(stack, token)
-		case KindClose:
+		case KindParClose:
 			var op Token
 			for {
 				op, stack = stack[len(stack)-1], stack[:len(stack)-1]
-				if op.Kind == KindOpen {
+				if op.Kind == KindParOpen {
 					break
 				}
 				postfix = append(postfix, op)
